@@ -1,39 +1,50 @@
 // GTA III (Android 1.8, ARM32, libR1.so) - Density mod untuk AML
-// Naikkan kepadatan mobil & pejalan kaki.
+// Simbol sudah diverifikasi dari libR1.so milik user.
 #include <mod/amlmod.h>
 #include <mod/logger.h>
 
-MYMOD(net.kamu.gta3density, GTA3 Density, 1.0, Kamu)
+MYMOD(net.kamu.gta3density, GTA3 Density, 1.1, Kamu)
 
 // ====== ATUR DI SINI ======
-static const float CAR_DENSITY = 3.5f;  // 1.0 = normal
-static const float PED_DENSITY = 2.5f;
+static const float CAR_DENSITY = 3.0f;  // 1.0 = normal
+static const float PED_DENSITY = 3.0f;
+static const int   MAX_CARS    = 30;    // bawaan game: 12
+static const int   MAX_PEDS    = 60;    // bawaan game: 25
 // ==========================
 
 static float *pCarDensity = nullptr;
 static float *pPedDensity = nullptr;
+static int   *pMaxCars    = nullptr;
+static int   *pMaxPeds    = nullptr;
 
-// Hook CPopulation::Update(bool): setelah game hitung multiplier sendiri, kita timpa.
-static void (*Population_Update_orig)(bool) = nullptr;
-static void Population_Update_hook(bool addPeds) {
-    Population_Update_orig(addPeds);
+static void Apply() {
     if (pCarDensity) *pCarDensity = CAR_DENSITY;
     if (pPedDensity) *pPedDensity = PED_DENSITY;
+    if (pMaxCars)    *pMaxCars    = MAX_CARS;
+    if (pMaxPeds)    *pMaxPeds    = MAX_PEDS;
+}
+
+// CPopulation::Update() - tidak punya parameter di versi 1.8
+static void (*Population_Update_orig)() = nullptr;
+static void Population_Update_hook() {
+    Apply();                  // timpa sebelum game menghitung
+    Population_Update_orig();
+    Apply();                  // timpa lagi kalau game mengubahnya
 }
 
 extern "C" void OnModLoad() {
     void* h = aml->GetLibHandle("libR1.so");
     if (!h) { logger->Error("libR1.so tidak ketemu"); return; }
 
-    // Nama simbol dari re3, BELUM diverifikasi di APK 1.8. Cek logcat.
     pCarDensity = (float*)aml->GetSym(h, "_ZN8CCarCtrl20CarDensityMultiplierE");
     pPedDensity = (float*)aml->GetSym(h, "_ZN11CPopulation20PedDensityMultiplierE");
-    void* upd   = (void*)aml->GetSym(h, "_ZN11CPopulation6UpdateEb");
+    pMaxCars    = (int*)  aml->GetSym(h, "_ZN8CCarCtrl20MaxNumberOfCarsInUseE");
+    pMaxPeds    = (int*)  aml->GetSym(h, "_ZN11CPopulation20MaxNumberOfPedsInUseE");
+    void* upd   = (void*) aml->GetSym(h, "_ZN11CPopulation6UpdateEv");
 
-    logger->Info("CarDensity=%p PedDensity=%p Update=%p", pCarDensity, pPedDensity, upd);
+    logger->Info("car=%p ped=%p maxCars=%p maxPeds=%p update=%p",
+                 pCarDensity, pPedDensity, pMaxCars, pMaxPeds, upd);
 
-    if (upd && (pCarDensity || pPedDensity))
-        aml->Hook(upd, (void*)Population_Update_hook, (void**)&Population_Update_orig);
-    else
-        logger->Error("Simbol tidak ketemu, kirim log ini ke Claude");
+    if (upd) aml->Hook(upd, (void*)Population_Update_hook, (void**)&Population_Update_orig);
+    else     logger->Error("CPopulation::Update tidak ketemu");
 }
