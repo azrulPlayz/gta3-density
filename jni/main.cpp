@@ -6,8 +6,8 @@
 MYMOD(net.kamu.gta3density, GTA3 Density, 1.0, Kamu)
 
 // ====== ATUR DI SINI ======
-static const float CAR_DENSITY = 1.5f;  // 1.0 = normal
-static const float PED_DENSITY = 1.8f;
+static const float CAR_DENSITY = 3.5f;  // 1.0 = normal
+static const float PED_DENSITY = 2.5f;
 // ==========================
 
 static float *pCarDensity = nullptr;
