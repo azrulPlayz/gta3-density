@@ -1,1 +1,20 @@
-
+name: Build GTA3Density
+on: [push, workflow_dispatch]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ambil header AML
+        run: git clone --depth 1 https://github.com/RusJJ/AndroidModLoader.git aml
+      - name: Compile (ARM32)
+        run: |
+          CXX=$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi21-clang++
+          $CXX -shared -fPIC -O2 -std=c++17 -mthumb -mfloat-abi=softfp -DNDEBUG \
+            -I aml -I aml/mod -I aml/external \
+            jni/main.cpp aml/mod/logger.cpp aml/mod/config.cpp \
+            -static-libstdc++ -llog -ldl -o libGTA3Density.so
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libGTA3Density
+          path: libGTA3Density.so
