@@ -6,10 +6,10 @@
 MYMOD(net.kamu.gta3density, GTA3 Density, 1.1, Kamu)
 
 // ====== ATUR DI SINI ======
-static const float CAR_DENSITY = 100.0f;  // 1.0 = normal
+static const float CAR_DENSITY = 500.0f;  // 1.0 = normal
 static const float PED_DENSITY = 100.0f;
-static const int   MAX_CARS    = 300;    // bawaan game: 12
-static const int   MAX_PEDS    = 300;    // bawaan game: 25
+static const int   MAX_CARS    = 500;    // bawaan game: 12
+static const int   MAX_PEDS    = 100;    // bawaan game: 25
 // ==========================
 
 static float *pCarDensity = nullptr;
